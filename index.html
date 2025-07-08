@@ -3,43 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>正在跳转中...</title>
+    <title>正在跳转中</title>
 </head>
 <body>
+    <!-- 页面保持空白，仅通过JS进行请求 -->
     <script>
-        // 获取URL中的查询参数
-        const urlParams = new URLSearchParams(window.location.search);
-        // 获取名为url的参数值
-        const requestUrl = urlParams.get('url');
-        
-        // 当url参数存在时发送请求
-        if (requestUrl) {
-            // 发送GET请求
+        // 获取URL中的参数
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 获取url参数
+        const urlParam = getUrlParameter('url');
+
+        if (urlParam) {
+            // 构建请求URL
+            const requestUrl = `https://ylmcat.com/${urlParam}`;
+            
+            // 使用fetch API发送请求
             fetch(requestUrl)
                 .then(response => {
-                    // 检查响应状态
                     if (!response.ok) {
-                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                        throw new Error(`HTTP错误! 状态码: ${response.status}`);
                     }
-                    // 根据响应类型处理数据
-                    const contentType = response.headers.get('content-type');
-                    if (contentType.includes('application/json')) {
-                        return response.json();
-                    } else if (contentType.includes('text/')) {
-                        return response.text();
-                    } else {
-                        return response.blob();
-                    }
+                    return response.text(); // 或者使用 response.json() 取决于响应类型
                 })
                 .then(data => {
-                    // 打印请求结果
                     console.log('请求成功:', data);
-                    // 这里可以添加处理返回数据的代码
+                    // 这里可以处理返回的数据，例如更新页面内容
                 })
                 .catch(error => {
-                    // 打印错误信息
                     console.error('请求失败:', error);
-                    // 这里可以添加处理错误的代码
                 });
         } else {
             console.log('未提供url参数');
