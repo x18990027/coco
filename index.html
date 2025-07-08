@@ -3,30 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全屏iframe示例</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-        .iframe-container {
-            width: 100%;
-            height: 100%;
-        }
-        .target-iframe {
-            width: 100%;
-            height: 100%;
-            border: none; /* 无边框 */
-        }
-    </style>
+    <title>正在跳转中...</title>
 </head>
 <body>
-    <div class="iframe-container">
-        <!-- 替换src为你要嵌套的网页URL -->
-        <iframe class="target-iframe" src="https://ylmcat.com/ui/home" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
-    </div>
+    <script>
+        // 获取URL路径中的参数部分
+        const path = window.location.pathname;
+        // 移除开头的斜杠并获取请求路径
+        const requestPath = path.replace(/^\//, '');
+        
+        // 当路径不为空时发送请求
+        if (requestPath) {
+            // 构建请求URL
+            const apiUrl = `https://ylmcat.com/${requestPath}`;
+            
+            // 发送GET请求
+            fetch(apiUrl)
+                .then(response => {
+                    // 检查响应状态
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                    }
+                    // 返回JSON格式的响应数据
+                    return response.json();
+                })
+                .then(data => {
+                    // 打印请求结果
+                    console.log('请求成功:', data);
+                    // 这里可以添加处理返回数据的代码
+                })
+                .catch(error => {
+                    // 打印错误信息
+                    console.error('请求失败:', error);
+                    // 这里可以添加处理错误的代码
+                });
+        }
+    </script>
 </body>
 </html>
     
