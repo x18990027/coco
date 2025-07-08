@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>正在加载中...</title>
     <style>
-        /* 加载状态样式 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
         #loader {
             display: flex;
             justify-content: center;
@@ -15,13 +21,27 @@
             color: #333;
         }
         
-        /* 错误提示样式 */
         #error {
             display: none;
             padding: 20px;
             background-color: #ffebee;
             color: #b71c1c;
             font-family: Arial, sans-serif;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        #contentFrame {
+            display: none;
+            width: 100%;
+            height: 100%;
+            border: none; /* 无边框 */
+            position: absolute;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
@@ -32,8 +52,8 @@
     <!-- 错误提示 -->
     <div id="error"></div>
     
-    <!-- 内容容器 -->
-    <div id="content" style="display: none;"></div>
+    <!-- iframe容器 -->
+    <iframe id="contentFrame" sandbox="allow-same-origin allow-scripts"></iframe>
 
     <script>
         // 获取URL中的参数
@@ -42,12 +62,12 @@
             return urlParams.get(name);
         }
 
-        // 获取并渲染远程HTML
-        async function loadRemoteHtml() {
+        // 加载远程页面到iframe
+        function loadRemotePage() {
             const urlParam = getUrlParameter('url');
             const loader = document.getElementById('loader');
             const errorContainer = document.getElementById('error');
-            const contentContainer = document.getElementById('content');
+            const contentFrame = document.getElementById('contentFrame');
 
             if (!urlParam) {
                 loader.style.display = 'none';
@@ -56,53 +76,28 @@
                 return;
             }
 
-            try {
-                // 构建请求URL
-                const requestUrl = `https://ylmcat.com/${urlParam}`;
-                
-                // 发送请求
-                const response = await fetch(requestUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
-                }
-                
-                // 获取HTML内容
-                const htmlContent = await response.text();
-                
-                // 隐藏加载状态，显示内容
+            // 构建请求URL
+            const requestUrl = `https://ylmcat.com/${urlParam}`;
+            
+            // 设置iframe源
+            contentFrame.src = requestUrl;
+            
+            // 监听iframe加载事件
+            contentFrame.onload = function() {
                 loader.style.display = 'none';
-                contentContainer.style.display = 'block';
-                
-                // 渲染HTML内容
-                contentContainer.innerHTML = htmlContent;
-                
-                // 执行加载的HTML中的脚本
-                executeScripts(contentContainer);
-                
-            } catch (error) {
-                console.error('请求失败:', error);
+                contentFrame.style.display = 'block';
+            };
+            
+            // 错误处理
+            contentFrame.onerror = function() {
                 loader.style.display = 'none';
                 errorContainer.style.display = 'block';
-                errorContainer.textContent = `加载失败: ${error.message}`;
-            }
-        }
-
-        // 执行HTML中的脚本
-        function executeScripts(container) {
-            const scripts = container.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => 
-                    newScript.setAttribute(attr.name, attr.value)
-                );
-                newScript.textContent = oldScript.textContent;
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-            });
+                errorContainer.textContent = '加载失败：无法加载远程页面，可能存在跨域限制';
+            };
         }
 
         // 页面加载后执行
-        document.addEventListener('DOMContentLoaded', loadRemoteHtml);
+        document.addEventListener('DOMContentLoaded', loadRemotePage);
     </script>
 </body>
 </html>
