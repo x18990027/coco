@@ -7,25 +7,29 @@
 </head>
 <body>
     <script>
-        // 获取URL路径中的参数部分
-        const path = window.location.pathname;
-        // 移除开头的斜杠并获取请求路径
-        const requestPath = path.replace(/^\//, '');
+        // 获取URL中的查询参数
+        const urlParams = new URLSearchParams(window.location.search);
+        // 获取名为url的参数值
+        const requestUrl = urlParams.get('url');
         
-        // 当路径不为空时发送请求
-        if (requestPath) {
-            // 构建请求URL
-            const apiUrl = `https://ylmcat.com/${requestPath}`;
-            
+        // 当url参数存在时发送请求
+        if (requestUrl) {
             // 发送GET请求
-            fetch(apiUrl)
+            fetch(requestUrl)
                 .then(response => {
                     // 检查响应状态
                     if (!response.ok) {
                         throw new Error(`HTTP错误! 状态: ${response.status}`);
                     }
-                    // 返回JSON格式的响应数据
-                    return response.json();
+                    // 根据响应类型处理数据
+                    const contentType = response.headers.get('content-type');
+                    if (contentType.includes('application/json')) {
+                        return response.json();
+                    } else if (contentType.includes('text/')) {
+                        return response.text();
+                    } else {
+                        return response.blob();
+                    }
                 })
                 .then(data => {
                     // 打印请求结果
@@ -37,6 +41,8 @@
                     console.error('请求失败:', error);
                     // 这里可以添加处理错误的代码
                 });
+        } else {
+            console.log('未提供url参数');
         }
     </script>
 </body>
