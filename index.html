@@ -62,7 +62,7 @@
             return urlParams.get(name);
         }
 
-        // 加载远程页面到iframe
+        // 先请求后端接口获取目标链接，再加载到iframe
         function loadRemotePage() {
             const urlParam = getUrlParameter('url');
             const loader = document.getElementById('loader');
@@ -76,24 +76,45 @@
                 return;
             }
 
-            // 构建请求URL
-            const requestUrl = `https://ylmcat.com/${urlParam}`;
+            // 构建后端接口请求URL
+            const apiUrl = `https://ylmcat.com/getUrl/${urlParam}`;
             
-            // 设置iframe源
-            contentFrame.src = requestUrl;
-            
-            // 监听iframe加载事件
-            contentFrame.onload = function() {
-                loader.style.display = 'none';
-                contentFrame.style.display = 'block';
-            };
-            
-            // 错误处理
-            contentFrame.onerror = function() {
-                loader.style.display = 'none';
-                errorContainer.style.display = 'block';
-                errorContainer.textContent = '加载失败：无法加载远程页面，可能存在跨域限制';
-            };
+            // 发起请求获取目标链接
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误，状态码：${response.status}`);
+                    }
+                    return response.text(); // 解析为文本（返回的链接字符串）
+                })
+                .then(targetUrl => {
+                    // 检查返回的链接是否有效
+                    if (!targetUrl || targetUrl.trim() === '') {
+                        throw new Error('后端返回的链接为空或无效');
+                    }
+                    
+                    // 设置iframe源为获取到的链接
+                    contentFrame.src = targetUrl;
+                    
+                    // 监听iframe加载完成
+                    contentFrame.onload = function() {
+                        loader.style.display = 'none';
+                        contentFrame.style.display = 'block';
+                    };
+                    
+                    // iframe加载错误处理
+                    contentFrame.onerror = function() {
+                        loader.style.display = 'none';
+                        errorContainer.style.display = 'block';
+                        errorContainer.textContent = '加载失败：无法加载目标页面，可能存在跨域限制或链接无效';
+                    };
+                })
+                .catch(error => {
+                    loader.style.display = 'none';
+                    errorContainer.style.display = 'block';
+                    errorContainer.textContent = `错误：${error.message}`;
+                    console.error('加载过程出错：', error);
+                });
         }
 
         // 页面加载后执行
@@ -101,4 +122,3 @@
     </script>
 </body>
 </html>
-    
